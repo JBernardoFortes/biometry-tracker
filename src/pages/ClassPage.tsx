@@ -20,7 +20,7 @@ const historicoMock = [
 export default function ClassPage() {
   const { id } = useParams();
   // de acordo com esse id fazer a requisicao no servidor pra pegar os dados da turma e passar pro s ccomponentes
-  const [alunos, setAlunos] = useState(alunosMock);
+  const [alunos, _setAlunos] = useState(alunosMock);
 
 
   return (

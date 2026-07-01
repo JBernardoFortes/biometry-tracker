@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 
-// Mock — substitua por dados vindos da API
 const turmas = [
   { id: 1, nome: "Topicos em computacao aplicada", turno: "Manhã", alunos: 28 },
   { id: 2, nome: "Engenharia de software", turno: "Tarde", alunos: 24 },

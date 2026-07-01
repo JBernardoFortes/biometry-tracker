@@ -1,4 +1,3 @@
-import React from "react";
 
 interface HistoricProps {
   historico: { id: number; data: string; presentes: number; total: number }[];

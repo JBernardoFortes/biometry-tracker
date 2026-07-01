@@ -8,7 +8,6 @@ import MainLayout from "./components/layout/MainLayout";
 
 import ClassPage from "./pages/ClassPage";
 import ClassesPage from "./pages/ClassesPage";
-import RegisterBiometryPage from "./pages/RegisterBiometryPage";
 
 const router = createBrowserRouter([
   {
@@ -26,10 +25,6 @@ const router = createBrowserRouter([
       {
         path: "classes",
         element: <ClassesPage />,
-      },
-      {
-        path: "register-biometry",
-        element: <RegisterBiometryPage />,
       },
       {
         path: "/",
