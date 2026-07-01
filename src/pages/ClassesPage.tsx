@@ -1,11 +1,5 @@
 import { Link } from "react-router-dom";
-
-const turmas = [
-  { id: 1, nome: "Topicos em computacao aplicada", turno: "Manhã", alunos: 28 },
-  { id: 2, nome: "Engenharia de software", turno: "Tarde", alunos: 24 },
-  { id: 3, nome: "Arquitetura de computadores", turno: "Noite", alunos: 19 },
-  { id: 4, nome: "Introducao a logica", turno: "Manhã", alunos: 31 },
-];
+import { turmas } from "../mocks/mock";
 
 export default function ClassesPage() {
   return (
@@ -23,9 +17,27 @@ export default function ClassesPage() {
             <h2 className="text-lg font-semibold text-slate-800">
               {turma.nome}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">{turma.turno}</p>
+
+            <span className="inline-block mt-1 mb-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+              {turma.turno}
+            </span>
+
+            <div className="flex flex-wrap gap-1 mb-2">
+              {turma.dias.map((dia) => (
+                <span
+                  key={dia}
+                  className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded"
+                >
+                  {dia}
+                </span>
+              ))}
+            </div>
+
             <p className="text-sm text-slate-500">
-              {turma.alunos} aluno(s)
+              {turma.horarioInicio} — {turma.horarioFim}
+            </p>
+            <p className="text-sm text-slate-500">
+              {turma.totalAlunos} aluno(s)
             </p>
           </Link>
         ))}

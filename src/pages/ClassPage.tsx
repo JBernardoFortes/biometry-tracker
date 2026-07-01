@@ -1,36 +1,103 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+
+import Calendar from "../components/ui/Calendar";
+import PhotoVerificationModal from "../components/ui/PhotoVerificationModal";
+
+import {
+  turmas,
+  alunosPorTurma,
+  historicoPorTurma,
+  fotosPorTurmaEData,
+} from "../mocks/mock";
+import type { AlunoComPresencaDoDia, RegistroHistorico } from "../types";
 import ClassPageHeader from "../components/ui/ClassPageHeader";
 import { StudentsList } from "../components/ui/StudentsList";
 import Historic from "../components/ui/Historic";
 
-const alunosMock = [
-  { id: 1, nome: "Ana Souza", presente: false },
-  { id: 2, nome: "Bruno Lima", presente: false },
-  { id: 3, nome: "Carla Dias", presente: false },
-  { id: 4, nome: "Diego Alves", presente: false },
-];
-
-const historicoMock = [
-  { id: 1, data: "28/06/2026", presentes: 26, total: 28 },
-  { id: 2, data: "21/06/2026", presentes: 24, total: 28 },
-  { id: 3, data: "14/06/2026", presentes: 27, total: 28 },
-];
-
 export default function ClassPage() {
-  const { id } = useParams();
-  // de acordo com esse id fazer a requisicao no servidor pra pegar os dados da turma e passar pro s ccomponentes
-  const [alunos, _setAlunos] = useState(alunosMock);
+  const { id } = useParams<{ id: string }>();
+  const turmaId = Number(id);
 
+  const turma = turmas.find((t) => t.id === turmaId);
+  const alunos = alunosPorTurma[turmaId] ?? [];
+  const historicoCompleto = historicoPorTurma[turmaId] ?? [];
+
+  const datasComRegistro = useMemo(
+    () => [...new Set(historicoCompleto.map((registro) => registro.data))],
+    [historicoCompleto],
+  );
+
+  const [selectedDate, setSelectedDate] = useState<string>(
+    datasComRegistro[datasComRegistro.length - 1] ??
+      new Date().toISOString().slice(0, 10),
+  );
+  const [isPhotoModalOpen, setPhotoModalOpen] = useState(false);
+
+  const historicoDoDia: RegistroHistorico[] = useMemo(
+    () =>
+      historicoCompleto
+        .filter((registro) => registro.data === selectedDate)
+        .sort((a, b) => a.horario.localeCompare(b.horario)),
+    [historicoCompleto, selectedDate],
+  );
+
+  const alunosComPresencaDoDia: AlunoComPresencaDoDia[] = useMemo(() => {
+    return alunos.map((aluno) => {
+      const eventosDoAluno = historicoDoDia.filter(
+        (registro) => registro.alunoId === aluno.id,
+      );
+      const ultimoEvento = eventosDoAluno[eventosDoAluno.length - 1];
+
+      return {
+        ...aluno,
+        presente: ultimoEvento ? ultimoEvento.tipo === "entrada" : false,
+      };
+    });
+  }, [alunos, historicoDoDia]);
+
+  const fotosDoDia = fotosPorTurmaEData[`${turmaId}-${selectedDate}`] ?? [];
+
+  if (!turma) {
+    return <p className="text-slate-500">Turma não encontrada.</p>;
+  }
 
   return (
     <div>
-      <ClassPageHeader id={Number(id)} />
+      {/* Cabeçalho com ações */}
+      <ClassPageHeader turma={turma} setPhotoModalOpen={setPhotoModalOpen} />
 
-      <StudentsList alunos={alunos} />
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+        {/* Calendário para selecionar o dia */}
+        <div>
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">
+            Selecionar data
+          </h2>
+          <Calendar
+            value={selectedDate}
+            onChange={setSelectedDate}
+            highlightedDates={datasComRegistro}
+          />
+        </div>
 
-      {/* Histórico de frequência */}
-      <Historic historico={historicoMock} />
+        <div className="space-y-8">
+          {/* Lista de alunos */}
+          <StudentsList
+            selectedDate={selectedDate}
+            alunosComPresencaDoDia={alunosComPresencaDoDia}
+          />
+          {/* Histórico de entrada/saída do dia */}
+          <Historic historicoDoDia={historicoDoDia} />
+        </div>
+      </div>
+
+      <PhotoVerificationModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setPhotoModalOpen(false)}
+        fotos={fotosDoDia}
+        turmaNome={turma.nome}
+        data={selectedDate}
+      />
     </div>
   );
 }

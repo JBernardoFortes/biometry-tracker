@@ -1,7 +1,7 @@
 // depoois adaptar o mock para chamadas de api
+import type { Turma } from "../types";
 
-
-export const turmas = [
+export const turmas: Turma[] = [
   {
     id: 1,
     nome: "Turma A",
@@ -31,7 +31,10 @@ export const turmas = [
   },
 ];
 
-export const alunosPorTurma = {
+export const alunosPorTurma: Record<
+  number,
+  { id: number; matricula: string; nome: string; presente: boolean }[]
+> = {
   1: [
     { id: 1, matricula: "2026001", nome: "Ana Souza", presente: false },
     { id: 2, matricula: "2026002", nome: "Bruno Lima", presente: false },
@@ -50,7 +53,17 @@ export const alunosPorTurma = {
   ],
 };
 
-export const historicoPorTurma = {
+export const historicoPorTurma: Record<
+  number,
+  {
+    id: number;
+    data: string;
+    alunoId: number;
+    alunoNome: string;
+    tipo: any;
+    horario: string;
+  }[]
+> = {
   1: [
     {
       id: 1,
@@ -171,7 +184,7 @@ export const historicoPorTurma = {
   ],
 };
 
-export const fotosPorTurmaEData = {
+export const fotosPorTurmaEData: Record<string, Foto[]> = {
   "1-2026-07-01": [
     {
       id: 1,
@@ -220,4 +233,10 @@ export const fotosPorTurmaEData = {
       horario: "19:06",
     },
   ],
+};
+
+type Foto = {
+  id: number;
+  url: string;
+  horario: string;
 };
