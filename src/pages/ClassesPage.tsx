@@ -1,8 +1,12 @@
+import { Link } from "react-router-dom";
 
-const ClassesPage = () => {
+export default function ClassesPage() {
   return (
-    <div>ClassesPage</div>
-  )
-}
+    <div>
+      <h1>Turmas</h1>
+      <p>Lista de todas as turmas cadastradas.</p>
 
-export default ClassesPage
+      <Link to="/class/1">Ver turma 1</Link>
+    </div>
+  );
+}

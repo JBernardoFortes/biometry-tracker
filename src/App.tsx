@@ -1,41 +1,44 @@
-import Sidebar from "./components/layout/Sidebar";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+
 import MainLayout from "./components/layout/MainLayout";
-import ClassesPage from "./pages/ClassesPage";
+
 import ClassPage from "./pages/ClassPage";
-import RegisterBiometry from "./pages/RegisterBiometry";
+import ClassesPage from "./pages/ClassesPage";
+import RegisterBiometryPage from "./pages/RegisterBiometryPage";
 
-import { createBrowserRouter } from "react-router-dom";
-
-createBrowserRouter([
+const router = createBrowserRouter([
   {
-    element: <App />,
     path: "/",
+    element: <MainLayout />,
     children: [
       {
-        path: "/",
-        element: <ClassesPage></ClassesPage>
+        index: true,
+        element: <Navigate to="/classes" replace />,
       },
       {
-        path: "/class/:classId",
-        element: <ClassPage></ClassPage>
-      }
-      , {
-        path: "/class/:classId/register-fingerprint"
-        , element: <RegisterBiometry></RegisterBiometry>
-      }
-
-    ]
+        path: "class/:id",
+        element: <ClassPage />,
+      },
+      {
+        path: "classes",
+        element: <ClassesPage />,
+      },
+      {
+        path: "register-biometry",
+        element: <RegisterBiometryPage />,
+      },
+      {
+        path: "/",
+        element: <Navigate to="/classes" replace />,
+      },
+    ],
   },
 ]);
 
-function App() {
-  return (
-    <div className="text-3xl text-amber-400">
-      <Sidebar></Sidebar>
-      <MainLayout>
-      </MainLayout>
-    </div>
-  );
+export default function App() {
+  return <RouterProvider router={router} />;
 }
-
-export default App;

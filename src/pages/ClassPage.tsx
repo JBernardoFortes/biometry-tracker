@@ -1,8 +1,12 @@
+import { useParams } from "react-router-dom";
 
-const ClassPage = () => {
+export default function ClassPage() {
+  const { id } = useParams();
+
   return (
-    <div>ClassPage</div>
-  )
+    <div>
+      <h1>Turma #{id}</h1>
+      <p>Detalhes da turma selecionada.</p>
+    </div>
+  );
 }
-
-export default ClassPage
