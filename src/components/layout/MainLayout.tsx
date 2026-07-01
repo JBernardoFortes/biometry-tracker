@@ -3,10 +3,10 @@ import Sidebar from "../Sidebar";
 
 export default function MainLayout() {
   return (
-    <div className="main-layout">
+    <div className="min-h-screen bg-slate-50 flex flex-row justify-start">
       <Sidebar />
 
-      <main className="main-content">
+      <main className="p-8">
         <Outlet />
       </main>
     </div>
