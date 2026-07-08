@@ -1,29 +1,28 @@
 /*
  * =====================================================================
- *  Arduino Mega: AS608 + HC-SR04 
+ * Arduino Mega: AS608 + HC-SR04 
  * =====================================================================
  *
- *  Bibliotecas necessárias (Library Manager):
- *    "Adafruit Fingerprint Sensor Library" (Adafruit)
- *    "NewPing" (Tim Eckelmanns)
- * 
- *
- *  COMANDOS (Monitor Serial):
- *    e → cadastrar digital (debug)
- *    d → apagar todas as digitais (debug)
- *    u → leitura única do ultrassônico
+ * Bibliotecas necessárias (Library Manager):
+ * "Adafruit Fingerprint Sensor Library" (Adafruit)
+ * "NewPing" (Tim Eckelmanns)
+ * *
+ * COMANDOS (Monitor Serial):
+ * e → cadastrar digital (debug)
+ * d → apagar todas as digitais (debug)
+ * u → leitura única do ultrassônico
  * =====================================================================
  */
-
 #include <Adafruit_Fingerprint.h>
 #include <NewPing.h>
 
 const uint8_t  LIMIAR_PRESENCA_CM    = 80;    // distância de detecção (cm)
-const uint32_t DEBOUNCE_PRESENCA_MS  = 2000;  // intervalo mínimo entre passagens
+const uint32_t DEBOUNCE_PRESENCA_MS  = 1000;  // intervalo mínimo entre passagens
 const uint16_t MAX_DISTANCIA_CM      = 200;
-const uint16_t INTERVALO_ULTRASSOM_MS = 200;  // polling mais rápido para porta
+const uint16_t INTERVALO_ULTRASSOM_MS = 100;  // polling mais rápido para porta
 const uint32_t FP_BAUD               = 57600;
 const uint32_t DEBOUNCE_DIGITAL_MS   = 2000;  // evita leitura dupla do mesmo toque
+const uint32_t JANELA_CONFIRMACAO_MS  = 5000; 
 
 //  Pinos
 #define TRIG_PIN  6
@@ -34,88 +33,86 @@ Adafruit_Fingerprint finger(&Serial2);
 
 //  Guarda o status de cada ID: true = entrou, false = saiu
 //  IDs válidos: 1–127 
-bool estadoUsuario[128] = { false };
+bool     estadoUsuario[128]   = { false };
 uint32_t ultimaLeituraDigital = 0;
 
+// Pendente: digital lida aguardando confirmação do ultrassônico
+int      idPendente           = -1;      // -1 = nenhum pendente
+bool     tipoPendente         = false;   // false=entrada, true=saida
+uint32_t tempoPendente        = 0;
 
 uint32_t ultimaLeituraUltrassom = 0;
 uint32_t ultimaPassagem         = 0;
 bool     objetoNoLimiar         = false;
-uint16_t menorDistancia         = 0;    
 
-void emitirEvento(const char* tipo, int digitalId = -1, int distancia = -1) {
-
-  // DEBUG
-  Serial.print(F("[Evento] tipo="));
-  Serial.print(tipo);
-  if (digitalId >= 0) { Serial.print(F("  id="));        Serial.print(digitalId); }
-  if (distancia >= 0) { Serial.print(F("  distancia=")); Serial.print(distancia); Serial.print(F("cm")); }
-  Serial.println();
-
-  // TODO JSON para o Node.js
+void emitirEvento(const char* evento, int biometriaId) {
+  Serial.print(F("{\"evento\":\""));
+  Serial.print(evento);
+  Serial.print(F("\",\"biometriaId\":"));
+  Serial.print(biometriaId);
+  Serial.println(F("}"));
 }
 
-
 void taskFingerprint() {
-  uint32_t agora = millis();
+  if (idPendente >= 0) return;
 
-  // Debounce: ignora leituras muito seguidas (mesmo dedo ainda no sensor)
+  uint32_t agora = millis();
   if (agora - ultimaLeituraDigital < DEBOUNCE_DIGITAL_MS) return;
 
   uint8_t p = finger.getImage();
-  if (p == FINGERPRINT_NOFINGER) return;
-  if (p != FINGERPRINT_OK)       return;
-
+  if (p != FINGERPRINT_OK) return;
   p = finger.image2Tz();
   if (p != FINGERPRINT_OK) return;
 
   p = finger.fingerSearch();
-  if (p == FINGERPRINT_NOTFOUND) {
-    Serial.println(F("[AS608] Digital nao cadastrada."));
+  if (p != FINGERPRINT_OK) {
     ultimaLeituraDigital = agora;
     return;
   }
-  if (p != FINGERPRINT_OK) return;
 
   uint8_t id = finger.fingerID;
   ultimaLeituraDigital = agora;
 
-  if (!estadoUsuario[id]) {
-    estadoUsuario[id] = true;
-    emitirEvento("entrada", id);
-  } else {
-    estadoUsuario[id] = false;
-    emitirEvento("saida", id);
-  }
+  // Trava o sistema aguardando a passagem física
+  idPendente    = id;
+  tipoPendente  = estadoUsuario[id]; 
+  tempoPendente = agora;
+  
+  Serial.println(F("Digital OK. Aguardando passagem..."));
 }
 
-// Envia evento quando o aluno passar pelo sensor
-void taskUltrassonico(){
+void taskUltrassonico() {
   uint32_t agora = millis();
   if (agora - ultimaLeituraUltrassom < INTERVALO_ULTRASSOM_MS) return;
   ultimaLeituraUltrassom = agora;
 
-  unsigned int distancia    = sonar.ping_cm();
-  bool         objetoProximo = (distancia > 0 && distancia < LIMIAR_PRESENCA_CM);
+  if (idPendente >= 0 && (agora - tempoPendente > JANELA_CONFIRMACAO_MS)) {
+    idPendente = -1; // Cancela a entrada, a pessoa bateu o dedo mas não passou
+    Serial.println(F("Passagem expirada."));
+  }
+
+  unsigned int distancia = sonar.ping_cm();
+  bool objetoProximo = (distancia > 0 && distancia < LIMIAR_PRESENCA_CM);
 
   if (objetoProximo && !objetoNoLimiar) {
-    objetoNoLimiar  = true;
-    menorDistancia  = distancia;
+    objetoNoLimiar = true;
   }
 
-  if (objetoProximo && objetoNoLimiar && distancia < menorDistancia) {
-    menorDistancia = distancia;
-  }
-
-  if (!objetoProximo && objetoNoLimiar &&
-      (agora - ultimaPassagem >= DEBOUNCE_PRESENCA_MS)) {
+  if (!objetoProximo && objetoNoLimiar && (agora - ultimaPassagem >= DEBOUNCE_PRESENCA_MS)) {
     objetoNoLimiar = false;
     ultimaPassagem = agora;
-    emitirEvento("passagem", -1, (int)menorDistancia);
+
+    if (idPendente >= 0) {
+      const char* tipoEvento = tipoPendente ? "saida" : "entrada";
+      estadoUsuario[idPendente] = !tipoPendente;
+      
+      emitirEvento(tipoEvento, idPendente);
+
+      idPendente = -1; 
+    }
   }
 }
 
-//  cadastro (debug)
 uint8_t cadastrarDigital(uint8_t id) {
   uint8_t p = -1;
   Serial.println(F("Encoste o dedo..."));
@@ -175,28 +172,19 @@ void apagarTudo() {
 void setup() {
   Serial.begin(9600);
   delay(400);
-  Serial.println(F("\n=== Arduino Mega==="));
 
   Serial2.begin(FP_BAUD);
   finger.begin(FP_BAUD);
   delay(100);
 
-  if (finger.verifyPassword()) {
-    finger.getTemplateCount();
-    Serial.print(F("[AS608] OK — digitais: "));
-    Serial.println(finger.templateCount);
+  if (!finger.verifyPassword()) {
+    Serial.println(F("AS608 nao encontrado"));
   } else {
-    Serial.println(F("[AS608] ERRO — cheque pinos 16/17."));
+    finger.getTemplateCount();
   }
-
-  Serial.println(F("[HC-SR04] OK"));
-  Serial.println(F("\nMonitorando..."));
-  Serial.println(F("'e' cadastrar  |  'd' apagar  |  'u' medir\n"));
 }
 
-
 void loop() {
-
   if (Serial.available()) {
     char cmd = (char)Serial.read();
     while (Serial.available()) Serial.read();
