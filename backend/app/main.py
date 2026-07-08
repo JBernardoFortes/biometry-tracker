@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.routers.eventos import router as eventos_router
 
@@ -9,3 +10,4 @@ app = FastAPI(
 )
 
 app.include_router(eventos_router)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
