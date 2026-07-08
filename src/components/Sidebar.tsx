@@ -12,7 +12,7 @@ const links: SidebarLink[] = [
 export default function Sidebar() {
   return (
     <aside className=" inset-y-0 left-0 w-60 flex flex-col bg-slate-900 text-white p-6">
-      <div className="text-lg font-bold mb-8">Minha Aplicação</div>
+      <div className="text-lg font-bold mb-8">Presenca</div>
 
       <nav className="flex flex-col gap-2">
         {links.map(({ to, label }) => (
