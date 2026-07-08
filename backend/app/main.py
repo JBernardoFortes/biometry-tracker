@@ -15,4 +15,4 @@ app.add_middleware(
     allow_origins=["http://localhost:5173"],
 )
 app.include_router(eventos_router)
-app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory="./uploads"), name="uploads")
