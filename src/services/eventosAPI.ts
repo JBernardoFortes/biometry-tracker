@@ -31,7 +31,8 @@ function extrairHorarioDoNomeArquivo(nomeArquivo: string): string {
 }
 
 export async function fetchFotos(): Promise<Foto[]> {
-  const response = await fetch(`${API_BASE_URL}/imagens`);
+  const response = await fetch(`${API_BASE_URL}/evento/imagem`);
+    console.log(response)
   if (!response.ok) {
     throw new Error("Erro ao buscar imagens");
   }
