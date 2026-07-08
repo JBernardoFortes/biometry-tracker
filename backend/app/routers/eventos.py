@@ -6,6 +6,8 @@ from app.storage.memoria import (
     limpar_eventos
 )
 
+from datetime import datetime
+from pathlib import Path
 from fastapi import APIRouter, UploadFile, File
 
 router = APIRouter()
@@ -20,10 +22,20 @@ def receber_evento(evento: EventoRequest):
 
 @router.post("/evento/imagem")
 async def receber_imagem(imagem: UploadFile = File(...)):
+    pasta_imagens = Path("uploads")
+    pasta_imagens.mkdir(exist_ok=True)
+
+    extensao = Path(imagem.filename).suffix
+    nome_arquivo = datetime.now().strftime("%Y%m%d_%H%M%S_%f") + extensao
+
+    caminho_arquivo = pasta_imagens / nome_arquivo
+
+    with open(caminho_arquivo, "wb") as arquivo:
+        arquivo.write(await imagem.read())
+
     return {
         "mensagem": "Imagem recebida com sucesso.",
-        "nome_arquivo": imagem.filename,
-        "tipo": imagem.content_type
+        "arquivo": str(caminho_arquivo)
     }
 
 @router.get("/eventos")
