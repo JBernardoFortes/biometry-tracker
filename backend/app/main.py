@@ -6,13 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Biometry Tracker API",
-    description="Integração entre o hardware e o frontend do sistema de frequência por biometria.",
+    description="Inthttp://localhost:8000/eventopsegração entre o hardware e o frontend do sistema de frequência por biometria.",
     version="1.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5174"],
+    allow_origins=["http://localhost:5173"],
 )
 app.include_router(eventos_router)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
