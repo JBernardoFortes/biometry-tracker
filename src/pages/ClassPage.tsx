@@ -89,97 +89,109 @@ export default function ClassPage() {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Turma</h1>
       </div>
 
-      {/* Tabela de alunos */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">Alunos</h2>
+      {/* Conteúdo principal */}
+      <div className="flex w-full gap-8 mb-8">
+        {/* Tabela de alunos */}
+        <section className="flex-1 min-w-125">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">Alunos</h2>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase">
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Matrícula</th>
-                <th className="px-4 py-3">Nome</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {alunosComPresenca.map((aluno) => (
-                <tr key={aluno.id}>
-                  <td className="px-4 py-3 text-slate-500">{aluno.id}</td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {aluno.matricula}
-                  </td>
-                  <td className="px-4 py-3 font-medium text-slate-700">
-                    {aluno.nome}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        aluno.presente
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {aluno.presente ? "Presente" : "Ausente"}
-                    </span>
-                  </td>
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase">
+                  <th className="px-4 py-3">ID</th>
+                  <th className="px-4 py-3">Matrícula</th>
+                  <th className="px-4 py-3">Nome</th>
+                  <th className="px-4 py-3">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
 
-      {/* Logs da turma (todos os eventos, sem filtro de turma) */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3 max-h-25 h-25 overflow-y-auto">
-          Logs da Turma
-        </h2>
+              <tbody className="divide-y divide-slate-200">
+                {alunosComPresenca.map((aluno) => (
+                  <tr key={aluno.id}>
+                    <td className="px-4 py-3 text-slate-500">{aluno.id}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {aluno.matricula}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-700">
+                      {aluno.nome}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          aluno.presente
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        {aluno.presente ? "Presente" : "Ausente"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-        {logsOrdenados.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Nenhum evento recebido ainda.
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
-            {logsOrdenados.map((evento, index) => (
-              <li
-                key={`${evento.data}-${index}`}
-                className="flex items-center justify-between px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-700">
-                    {nomeDoAluno(evento.biometriaId)}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {formatarHorario(evento.data)}
-                    {evento.distancia !== undefined &&
-                      ` · ${evento.distancia}cm`}
-                  </p>
-                </div>
+        {/* Logs */}
+        <section className="flex-1">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">
+            Logs da Turma
+          </h2>
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden max-h-80 overflow-y-auto min-w-125">
+            {logsOrdenados.length === 0 ? (
+              <p className="p-4 text-sm text-slate-500">
+                Nenhum evento recebido ainda.
+              </p>
+            ) : (
+              <table className="w-full text-sm ">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase">
+                    <th className="px-4 py-3">Aluno</th>
+                    <th className="px-4 py-3">Horário</th>
+                    <th className="px-4 py-3">Evento</th>
+                  </tr>
+                </thead>
 
-                <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    evento.evento === "entrada"
-                      ? "bg-indigo-50 text-indigo-600"
-                      : "bg-amber-50 text-amber-600"
-                  }`}
-                >
-                  {evento.evento === "entrada" ? "Entrada" : "Saída"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                <tbody className="divide-y divide-slate-200">
+                  {logsOrdenados.map((evento, index) => (
+                    <tr key={`${evento.data}-${index}`}>
+                      <td className="px-4  font-medium text-slate-700">
+                        {nomeDoAluno(evento.biometriaId)}
+                      </td>
 
-      {/* Ações */}
+                      <td className="px-4 text-slate-600">
+                        {formatarHorario(evento.data)}
+                      </td>
+
+
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            evento.evento === "entrada"
+                              ? "bg-indigo-50 text-indigo-600"
+                              : "bg-amber-50 text-amber-600"
+                          }`}
+                        >
+                          {evento.evento === "entrada" ? "Entrada" : "Saída"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Botões */}
       <div className="flex gap-3">
         <button
           onClick={salvarPresenca}
@@ -196,6 +208,7 @@ export default function ClassPage() {
           Ver Fotos
         </button>
       </div>
+      {/* Ações */}
 
       <PhotoVerificationModal
         isOpen={isPhotoModalOpen}
