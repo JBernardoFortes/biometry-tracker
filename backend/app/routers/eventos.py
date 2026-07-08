@@ -1,3 +1,4 @@
+import os
 from app.models.evento import EventoRequest
 from typing import Optional
 from app.storage.memoria import (
@@ -57,3 +58,11 @@ def apagar_eventos():
     return {
         "mensagem": "Eventos apagados com sucesso."
     }
+
+
+@router.get("/evento/imagem")
+def listar_imagens():
+    pasta = Path("uploads")
+    if not pasta.exists():
+        return []
+    return sorted(os.listdir(pasta))
