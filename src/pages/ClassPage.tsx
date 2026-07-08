@@ -138,7 +138,7 @@ export default function ClassPage() {
 
       {/* Logs da turma (todos os eventos, sem filtro de turma) */}
       <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">
+        <h2 className="text-lg font-semibold text-slate-800 mb-3 max-h-25 h-25 overflow-y-auto">
           Logs da Turma
         </h2>
 
@@ -184,14 +184,14 @@ export default function ClassPage() {
         <button
           onClick={salvarPresenca}
           disabled={isSalvando}
-          className="px-4 py-2 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="px-4 py-2 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer"
         >
           {isSalvando ? "Salvando..." : "Salvar Presença"}
         </button>
 
         <button
           onClick={abrirModalFotos}
-          className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
+          className="px-4 py-2 rounded-md text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
         >
           Ver Fotos
         </button>
