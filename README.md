@@ -19,6 +19,24 @@ Código para os microcontroladores responsáveis pela captura presencial:
   - Realiza capturas fotográficas em intervalos aleatórios para auditoria.
   - Conecta-se à rede Wi-Fi e envia as imagens (JPEG) a um servidor.
 
+### Backend
+
+O backend foi desenvolvido utilizando FastAPI.
+
+Para executar:
+
+cd backend
+
+python -m venv .venv
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+
+A API ficará disponível em:
+
+http://127.0.0.1:8000
+
 ### Web App (`src/`)
 
 Interface web construída com **React 19 + TypeScript + Vite + TailwindCSS 4**:
