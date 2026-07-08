@@ -3,14 +3,15 @@
 #include <HTTPClient.h>
 
 // Intervalo de auditoria aleatória
-const uint32_t AUDIT_MIN_MS = 10UL * 1000UL;    // 10 segundos
-const uint32_t AUDIT_MAX_MS = 60UL * 1000UL;    // 60 segundos
+const uint32_t AUDIT_MIN_MS = 1UL * 1000UL;    // 1 segundo
+const uint32_t AUDIT_MAX_MS = 10UL * 1000UL;    // 10 segundos
 
-const char* WIFI_SSID     = "foca";
-const char* WIFI_PASSWORD = "foca1234";
+const char* WIFI_SSID     = "Rede_Auditoria";
+const char* WIFI_PASSWORD = "senha1234";
 
-const char* URL = "todo";
-const char* ENDPOINT    = "todo";
+const char* SERVER_HOST = "10.42.0.1"; 
+const int   SERVER_PORT = 8000;
+const char* SERVER_PATH = "/evento/imagem";
 
 // =====================================================================
 //  PINOUT CÂMERA — AI Thinker ESP32-CAMs
@@ -79,15 +80,71 @@ void agendarProximaAuditoria() {
 
 
 void enviarEvento(camera_fb_t* fb) {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[HTTP] Erro: WiFi desconectado.");
+    return;
+  }
 
-  contadorEventos++;
-  Serial.println("┌─────────────────────────────────┐");
-  Serial.printf( "│ Evento #%-3d  tipo: auditoria    │\n", contadorEventos);
-  Serial.printf( "│ Imagem: %6u bytes  (JPEG)    │\n", fb->len);
-  Serial.printf( "│ Uptime: %8lu s                │\n", millis() / 1000);
-  Serial.println("└─────────────────────────────────┘");
+  WiFiClient client;
+  Serial.printf("[HTTP] Conectando a %s:%d...\n", SERVER_HOST, SERVER_PORT);
 
-  // TODO: envio pro servidor
+  if (!client.connect(SERVER_HOST, SERVER_PORT)) {
+    Serial.println("[HTTP] Falha ao conectar no servidor.");
+    return;
+  }
+
+  String boundary = "----ESP32CamBoundary123";
+  
+  String head = "--" + boundary + "\r\n";
+  head += "Content-Disposition: form-data; name=\"imagem\"; filename=\"auditoria.jpg\"\r\n";
+  head += "Content-Type: image/jpeg\r\n\r\n";
+  
+  String tail = "\r\n--" + boundary + "--\r\n";
+
+  uint32_t contentLength = head.length() + fb->len + tail.length();
+
+  client.print(String("POST ") + SERVER_PATH + " HTTP/1.1\r\n");
+  client.print(String("Host: ") + SERVER_HOST + "\r\n");
+  client.print("Content-Length: " + String(contentLength) + "\r\n");
+  client.print("Content-Type: multipart/form-data; boundary=" + boundary + "\r\n");
+  client.print("\r\n");
+
+  client.print(head);
+
+  // Pra evitar o erro de "out of memory" ou falha no Watchdog da ESP32
+  // envia em chunks
+  uint8_t *fbBuf = fb->buf;
+  size_t fbLen = fb->len;
+  for (size_t n = 0; n < fbLen; n = n + 1024) {
+    if (n + 1024 < fbLen) {
+      client.write(fbBuf, 1024);
+      fbBuf += 1024;
+    } else if (fbLen % 1024 > 0) {
+      size_t remainder = fbLen % 1024;
+      client.write(fbBuf, remainder);
+    }
+  }
+
+  client.print(tail);
+
+  Serial.print("[HTTP] Resposta do backend: ");
+  long tempoInicio = millis();
+  bool respostaRecebida = false;
+  
+  while ((millis() - tempoInicio) < 5000) { 
+    while (client.available()) {
+      char c = client.read();
+      Serial.print(c);
+      respostaRecebida = true;
+    }
+
+    if (respostaRecebida && !client.available()) {
+      break; 
+    }
+    delay(10);
+  }
+  
+  client.stop();
 }
 
 
