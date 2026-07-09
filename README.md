@@ -1,75 +1,96 @@
-# React + TypeScript + Vite
+# SIPA - Sistema Integrado de Presença de ALunos
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de controle de frequência escolar por biometria, utilizando **Arduino Mega**, **ESP32-CAM**, **Sensor biométrico AS608** e **Sensor ultrassônico HC-SR04**.
 
-Currently, two official plugins are available:
+## Visão Geral
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+O projeto é dividido em duas frentes:
 
-## React Compiler
+### Firmware (`firmware/`)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Código para os microcontroladores responsáveis pela captura presencial:
 
-## Expanding the ESLint configuration
+- **Arduino Mega** (`main_loop_arduino.ino`)
+  - **AS608 (leitor de digital)**: Aluno encosta o dedo para registrar entrada/saída. O sensor busca a digital cadastrada e alterna o estado (presente/ausente) do ID correspondente.
+  - **HC-SR04 (ultrassônico)**: Detecta a passagem de pessoas por uma porta. Funciona como validação auxiliar para garantir que há alguém presente no momento da leitura.
+  - Interface serial para **debug**:  cadastro (`e`), limpeza de digitais (`d`) e teste do ultrassônico (`u`).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **ESP32-CAM** (`auditoria_esp32cam.ino`)
+  - Realiza capturas fotográficas em intervalos aleatórios para auditoria.
+  - Conecta-se à rede Wi-Fi e envia as imagens (JPEG) a um servidor.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+O backend foi desenvolvido utilizando FastAPI.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Para executar:
+
+cd backend
+
+python -m venv .venv
+
+pip install -r requirements.txt
+
+uvicorn app.main:app --reload
+
+A API ficará disponível em:
+
+http://127.0.0.1:8000
+
+### Web App (`src/`)
+
+Interface web construída com **React 19 + TypeScript + Vite + TailwindCSS 4**:
+
+- **Turmas** — Listagem de turmas com turno, dias da semana e horários.
+- **Alunos** — Visualização de alunos por turma com status de presença por data.
+- **Calendário** — Seleção de datas para consultar registros históricos.
+- **Histórico** — Registro de entrada/saída dos alunos no dia selecionado.
+- **Auditoria** — Modal de visualização das fotos capturadas pela ESP32-CAM.
+
+
+## Estrutura do Projeto
 
 ```
+├── firmware/
+│   ├── main_loop_arduino.ino   # Código do Arduino Mega (AS608 + HC-SR04)
+│   └── auditoria_esp32cam.ino  # Código da ESP32-CAM (captura de imagens)
+├── src/
+│   ├── components/
+│   │   ├── layout/MainLayout.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ui/
+│   │       ├── Calendar.tsx
+│   │       ├── ClassPageHeader.tsx
+│   │       ├── Historic.tsx
+│   │       ├── PhotoVerificationModal.tsx
+│   │       ├── Students.tsx
+│   │       └── StudentsList.tsx
+│   ├── mocks/mock.ts
+│   ├── pages/
+│   │   ├── ClassPage.tsx
+│   │   └── ClassesPage.tsx
+│   ├── routes/AppRoutes.tsx
+│   ├── services/api.ts
+│   └── types/index.ts
+├── package.json
+└── vite.config.ts
+```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Hardware
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Componente         | Função                          | Conexão                |
+|--------------------|---------------------------------|------------------------|
+| Arduino Mega       | Controlador principal           | —                      |
+| AS608              | Leitor de impressão digital     | Serial2 (pinos 16/17)  |
+| HC-SR04            | Sensor de distância ultrassônico| Trigger: 6, Echo: 7    |
+| ESP32-CAM          | Câmera para auditoria           | Wi-Fi + GPIO (AI Thinker pinout) |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Desenvolvimento da Aplicação Web
 
+```bash
+# Instalar dependências do frontend
+npm install
+
+# Servidor de desenvolvimento
+npm run dev
 ```
