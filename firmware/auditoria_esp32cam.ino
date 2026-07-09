@@ -4,7 +4,7 @@
 
 // Intervalo de auditoria aleatória
 const uint32_t AUDIT_MIN_MS = 1UL * 1000UL;    // 1 segundo
-const uint32_t AUDIT_MAX_MS = 10UL * 1000UL;    // 10 segundos
+const uint32_t AUDIT_MAX_MS = 30UL * 1000UL;    // 30 segundos
 
 const char* WIFI_SSID     = "Rede_Auditoria";
 const char* WIFI_PASSWORD = "senha1234";
